@@ -43,8 +43,7 @@ uci commit system
 
 # --- FIREWALL ---
 
-# Удаляем дефолтную lan зону (индекс 1, wan обычно 0)
-uci delete firewall.@zone[1]
+uci delete firewall.@zone[0]
 
 # Зона CAMS
 uci add firewall zone
@@ -84,10 +83,40 @@ uci add firewall forwarding
 uci set firewall.@forwarding[-1].src=SERVERS
 uci set firewall.@forwarding[-1].dest=wan
 
-# Форвардинг CAMS -> SERVERS (только камеры видят SRV)
+# Форвардинг CAMS -> SERVERS
 uci add firewall forwarding
 uci set firewall.@forwarding[-1].src=CAMS
 uci set firewall.@forwarding[-1].dest=SERVERS
+
+# Разрешить SSH и HTTP из SERVERS
+uci add firewall rule
+uci set firewall.@rule[-1].name=allow-ssh-servers
+uci set firewall.@rule[-1].src=SERVERS
+uci set firewall.@rule[-1].dest_port=22
+uci set firewall.@rule[-1].proto=tcp
+uci set firewall.@rule[-1].target=ACCEPT
+
+uci add firewall rule
+uci set firewall.@rule[-1].name=allow-http-servers
+uci set firewall.@rule[-1].src=SERVERS
+uci set firewall.@rule[-1].dest_port=80
+uci set firewall.@rule[-1].proto=tcp
+uci set firewall.@rule[-1].target=ACCEPT
+
+# Разрешить SSH и HTTP из TUNNELS
+uci add firewall rule
+uci set firewall.@rule[-1].name=allow-ssh-tunnels
+uci set firewall.@rule[-1].src=TUNNELS
+uci set firewall.@rule[-1].dest_port=22
+uci set firewall.@rule[-1].proto=tcp
+uci set firewall.@rule[-1].target=ACCEPT
+
+uci add firewall rule
+uci set firewall.@rule[-1].name=allow-http-tunnels
+uci set firewall.@rule[-1].src=TUNNELS
+uci set firewall.@rule[-1].dest_port=80
+uci set firewall.@rule[-1].proto=tcp
+uci set firewall.@rule[-1].target=ACCEPT
 
 # NAT для SERVERS
 uci add firewall redirect

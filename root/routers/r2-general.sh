@@ -57,7 +57,7 @@ uci commit system
 
 # --- FIREWALL ---
 
-uci delete firewall.@zone[1]
+uci delete firewall.@zone[0]
 
 # Зона ADMINS
 uci add firewall zone
