@@ -106,13 +106,6 @@ uci add firewall forwarding
 uci set firewall.@forwarding[-1].src=PRINTERS
 uci set firewall.@forwarding[-1].dest=TUNNELS
 
-# NAT для ADMINS
-uci add firewall redirect
-uci set firewall.@redirect[-1].name=masq-admins
-uci set firewall.@redirect[-1].src=ADMINS
-uci set firewall.@redirect[-1].dest=wan
-uci set firewall.@redirect[-1].target=MASQUERADE
-
 uci commit firewall
 
 # --- OSPF (FRR) ---
