@@ -11,12 +11,6 @@ services:
       - MYSQL_USER=zmuser
       - MYSQL_PASSWORD=zmpass
       - MYSQL_ROOT_PASSWORD=rootpass
-    healthcheck:
-      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
-      start_period: 10s
-      interval: 5s
-      timeout: 5s
-      retries: 10
 
   zoneminder:
     image: ghcr.io/zoneminder-containers/zoneminder-base:latest
@@ -24,8 +18,7 @@ services:
     restart: always
     stop_grace_period: 45s
     depends_on:
-      db:
-        condition: service_healthy
+      - db
     network_mode: host
     volumes:
       - ./zm/data:/data
@@ -36,7 +29,7 @@ services:
         tmpfs:
           size: 1000000000
     environment:
-      - ZM_DB_HOST=127.0.0.1
-      - ZM_DB_USER=zmuser
-      - ZM_DB_PASS=zmpass
-      - ZM_DB_NAME=zm
+      - MYSQL_HOST=127.0.0.1 # <-- вот это главное!
+      - MYSQL_USER=zmuser
+      - MYSQL_PASSWORD=zmpass
+      - MYSQL_DATABASE=zm
