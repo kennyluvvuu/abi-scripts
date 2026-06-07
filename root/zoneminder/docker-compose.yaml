@@ -1,0 +1,35 @@
+services:
+  db:
+    image: mariadb:10.11
+    container_name: zm-mariadb
+    restart: always
+    network_mode: host
+    volumes:
+      - ./zm/db:/var/lib/mysql
+    environment:
+      - MYSQL_DATABASE=zm
+      - MYSQL_USER=zmuser
+      - MYSQL_PASSWORD=zmpass
+      - MYSQL_ROOT_PASSWORD=rootpass
+
+  zoneminder:
+    image: ghcr.io/zoneminder-containers/zoneminder-base:latest
+    container_name: zoneminder
+    restart: always
+    stop_grace_period: 45s
+    depends_on:
+      - db
+    network_mode: host
+    volumes:
+      - ./zm/data:/data
+      - ./zm/config:/config
+      - ./zm/log:/log
+      - type: tmpfs
+        target: /dev/shm
+        tmpfs:
+          size: 1000000000
+    environment:
+      - ZM_DB_HOST=127.0.0.1
+      - ZM_DB_USER=zmuser
+      - ZM_DB_PASS=zmpass
+      - ZM_DB_NAME=zm
