@@ -1,0 +1,13 @@
+zabbix-agent:
+  image: zabbix/zabbix-agent2:ubuntu-7.0-latest
+  container_name: zabbix-agent-admin
+  restart: unless-stopped
+  environment:
+    ZBX_HOSTNAME: "ADMIN-PC"
+    ZBX_SERVER_HOST: "0.0.0.0/0"
+    ZBX_PASSIVE_ALLOW: "true"
+    ZBX_ACTIVESERVERS: "<IP_SRV>:10051"
+  ports:
+    - "10050:10050"
+  network_mode: host
+  privileged: true

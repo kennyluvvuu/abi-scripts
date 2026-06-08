@@ -1,0 +1,97 @@
+version: "3.8"
+
+services:
+  zabbix-db:
+    image: mysql:8.0
+    container_name: zabbix-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: zabbix
+      MYSQL_USER: zabbix
+      MYSQL_PASSWORD: zabbix_pass
+      MYSQL_ROOT_PASSWORD: root_pass
+    volumes:
+      - zabbix-db-data:/var/lib/mysql
+    networks:
+      - zabbix-net
+    # ADDED: Healthcheck ensures MySQL is actually ready to accept connections
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-u",
+          "zabbix",
+          "-pzabbix_pass",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  zabbix-server:
+    image: zabbix/zabbix-server-mysql:ubuntu-7.0-latest
+    container_name: zabbix-server
+    restart: unless-stopped
+    depends_on:
+      zabbix-db:
+        # ADDED: Wait for the healthcheck to pass before starting
+        condition: service_healthy
+    environment:
+      DB_SERVER_HOST: zabbix-db
+      MYSQL_DATABASE: zabbix
+      MYSQL_USER: zabbix
+      MYSQL_PASSWORD: zabbix_pass
+      MYSQL_ROOT_PASSWORD: root_pass
+    ports:
+      - "10051:10051"
+    networks:
+      - zabbix-net
+
+  zabbix-web:
+    image: zabbix/zabbix-web-nginx-mysql:ubuntu-7.0-latest
+    container_name: zabbix-web
+    restart: unless-stopped
+    depends_on:
+      zabbix-server:
+        condition: service_started
+      zabbix-db:
+        condition: service_healthy
+    environment:
+      DB_SERVER_HOST: zabbix-db
+      MYSQL_DATABASE: zabbix
+      MYSQL_USER: zabbix
+      MYSQL_PASSWORD: zabbix_pass
+      ZBX_SERVER_HOST: zabbix-server
+      PHP_TZ: Europe/Moscow
+    ports:
+      - "8080:8080"
+    networks:
+      - zabbix-net
+
+  zabbix-agent:
+    image: zabbix/zabbix-agent2:ubuntu-7.0-latest
+    container_name: zabbix-agent-srv
+    restart: unless-stopped
+    # ДОБАВЛЕНО: заставляем агента ждать старта сервера
+    depends_on:
+      zabbix-server:
+        condition: service_started
+    environment:
+      - ZBX_SERVER_HOST=zabbix-server
+      - ZBX_SERVER_ACTIVE=zabbix-server
+      - ZBX_HOSTNAME=SRV
+    ports:
+      - "10050:10050"
+    networks:
+      - zabbix-net
+    privileged: true
+
+networks:
+  zabbix-net:
+    driver: bridge
+
+volumes:
+  zabbix-db-data:
